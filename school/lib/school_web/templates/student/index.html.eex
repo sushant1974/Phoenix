@@ -1,0 +1,140 @@
+<h1>Listing Students</h1>
+
+<p id="last_page"></p>
+<p id="demo"></p>
+
+<button id = "btnBackward" type="button"  onclick="functionBackward()">
+<<</button>
+
+<span id="demo1"></span>
+
+<button id = "btnForward" type="button" onclick="functionForward()">
+>></button>
+
+<p></p>
+
+<script>
+
+	function functionReset(start_num_val, end_num_val) {
+		var i, text;
+		text = ""
+		
+		var total_pages = parseInt(<%= @page.total_pages %>);
+		var cur_page = parseInt(<%= @page.page_number %>);
+		
+		//backward validation
+		if(start_num_val == 1)
+		{
+			document.getElementById("btnBackward").disabled = true;			
+		}
+		else
+			document.getElementById("btnBackward").disabled = false;
+			
+		//forward validation
+		if(end_num_val >= total_pages) {
+			end_num_val = total_pages;
+			document.getElementById("btnForward").disabled = true;			
+		}
+		else
+			document.getElementById("btnForward").disabled = false;		
+				
+		for (i=start_num_val; i<=end_num_val; i++) {	
+		
+			if(i == start_num_val+1)
+				text += "&nbsp; &nbsp;"
+		
+			if(i == cur_page)
+				var p = "<span><a href=\"http://localhost:4000/students?page="
+				+ i +"/\">" + "<span style=\"color:red;font-weight:bold\">" + i + "</span>" + "</a></span>"		
+				
+			else 
+				var p = "<span><a href=\"http://localhost:4000/students?page=" + i +"/\">" + i + "</a></span>"	
+				
+			text += p + ", &nbsp; &nbsp; &nbsp";
+		}
+		document.getElementById("demo1").innerHTML = text;
+		
+		sessionStorage.setItem("start_num_key", start_num_val);
+		sessionStorage.setItem("end_num_key", end_num_val);
+	}
+
+	function functionForward() {	
+			
+		//Get the last number
+		var start_num_val = parseInt(sessionStorage.getItem("start_num_key"))
+		if(isNaN(start_num_val))
+			return;
+			
+		var end_num_val = parseInt(sessionStorage.getItem("end_num_key"))
+		if(isNaN(end_num_val))
+			return;
+				
+		functionReset(start_num_val+5, end_num_val+5);		
+	}
+	
+	function functionBackward() {
+		
+		//Get the last number
+		var start_num_val = parseInt(sessionStorage.getItem("start_num_key"))
+		if(isNaN(start_num_val))
+			return;
+			
+		var end_num_val = parseInt(sessionStorage.getItem("end_num_key"))
+		if(isNaN(end_num_val))
+			return;
+				
+		functionReset(start_num_val-5, start_num_val-1);
+	}
+	//Default show from 1-5
+	var start_num_val = parseInt(sessionStorage.getItem("start_num_key"))
+	var end_num_val = parseInt(sessionStorage.getItem("end_num_key"))
+		
+	if(isNaN(start_num_val))
+		functionReset(1, 5);
+	else	
+		functionReset(start_num_val, end_num_val);	
+
+	var total_pages = <%= @page.total_pages %>;
+	var cur_page = <%= @page.page_number %>;
+	document.getElementById("demo").innerHTML = "Page: " + cur_page + "/" + total_pages;		
+	
+</script>
+
+<%= if  @page.page_number > 1 do %>
+	<span><%= link "Prev Page | ", to: Routes.student_path(@conn, :index, page: @page.page_number - 1) %></span>
+<% end %>
+
+<%= if  @page.page_number < @page.total_pages do %>
+	<span><%= link "Next Page", to: Routes.student_path(@conn, :index, page: @page.page_number + 1) %></span>
+<% end %>
+
+<table>
+  <thead>
+    <tr>
+      <th>Roll number</th>
+      <th>Class</th>
+      <th>Name</th>
+      <th>Address</th>
+
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+<%= for student <- @students do %>
+    <tr>
+      <td><%= student.roll_number %></td>
+      <td><%= student.class %></td>
+      <td><%= student.name %></td>
+      <td><%= student.address %></td>
+
+      <td>
+        <span><%= link "Show", to: Routes.student_path(@conn, :show, student) %></span>
+        <span><%= link "Edit", to: Routes.student_path(@conn, :edit, student) %></span>
+        <span><%= link "Delete", to: Routes.student_path(@conn, :delete, student), method: :delete, data: [confirm: "Are you sure?"] %></span>
+      </td>
+    </tr>
+<% end %>
+  </tbody>
+</table>
+
+<span><%= link "New Student", to: Routes.student_path(@conn, :new) %></span>
